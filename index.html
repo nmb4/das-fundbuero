@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundbüro — Uni Fundservice</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="grain-overlay"></div>
+
+    <header class="site-header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🎒</span>
+                <span class="logo-text">Fundbüro</span>
+            </div>
+            <nav class="main-nav">
+                <a href="#items" class="nav-link">Alle Fundsachen</a>
+                <a href="#about" class="nav-link">Wie es funktioniert</a>
+            </nav>
+            <button class="upload-btn" onclick="openUploadModal()">
+                <span class="btn-icon">+</span>
+                <span class="btn-text">Fund melden</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Filter Section -->
+        <section class="filter-section" id="items">
+            <div class="filter-container">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" placeholder="Nach Fundsachen suchen..." class="search-input">
+                </div>
+                <div class="category-filters">
+                    <button class="filter-btn active" data-category="all">Alle</button>
+                    <button class="filter-btn" data-category="electronics">Elektronik</button>
+                    <button class="filter-btn" data-category="accessories">Accessoires</button>
+                    <button class="filter-btn" data-category="clothing">Kleidung</button>
+                    <button class="filter-btn" data-category="documents">Dokumente</button>
+                    <button class="filter-btn" data-category="other">Sonstiges</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Items Grid -->
+        <section class="items-section">
+            <div class="section-header">
+                <h2 class="section-title">Neueste Fundsachen</h2>
+                <p class="section-subtitle">Klick auf ein Item für Details</p>
+            </div>
+            <div class="items-grid" id="itemsGrid">
+                <!-- Items will be rendered by JavaScript -->
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about-section" id="about">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">So funktioniert's</h2>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Fund melden</h3>
+                                <p>Mach ein Foto und beschreibe kurz, was und wo du es gefunden hast.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Wir zeigen es</h3>
+                                <p>Dein Fund erscheint hier auf der Seite für alle Studenten.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Wiedersehen!</h3>
+                                <p>Der Besitzer meldet sich und holt sein Eigentum ab.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <div class="blob blob-1"></div>
+                    <div class="blob blob-2"></div>
+                    <div class="illustration">🤝</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo-icon">🎒</span>
+                <span class="logo-text">Fundbüro</span>
+            </div>
+            <p class="footer-text">Mit 💛 gemacht für deine Uni</p>
+            <p class="footer-copy">© 2025 Fundbüro. Open Source Project.</p>
+        </div>
+    </footer>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeUploadModal()">×</button>
+            <h2 class="modal-title">Fund melden</h2>
+            <p class="modal-subtitle">Hilf mit, verlorene Sachen zurückzubringen!</p>
+
+            <form class="upload-form" id="uploadForm" onsubmit="handleUpload(event)">
+                <div class="form-group">
+                    <label class="form-label">Foto vom Fundstück *</label>
+                    <div class="image-upload" id="imageUpload">
+                        <input type="file" id="itemImage" accept="image/*" required hidden>
+                        <div class="upload-placeholder" onclick="document.getElementById('itemImage').click()">
+                            <div class="upload-icon">📷</div>
+                            <span class="upload-text">Foto hierher ziehen oder klicken</span>
+                            <span class="upload-hint">JPG, PNG bis 5MB</span>
+                        </div>
+                        <img class="upload-preview" id="imagePreview" alt="">
+                        <button type="button" class="upload-remove" id="removeImage" onclick="removeUploadedImage(event)">×</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="itemTitle">Titel *</label>
+                        <input type="text" id="itemTitle" class="form-input" placeholder="z.B. Schwarzer Rucksack" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="itemCategory">Kategorie *</label>
+                        <select id="itemCategory" class="form-select" required>
+                            <option value="">Kategorie wählen</option>
+                            <option value="electronics">Elektronik</option>
+                            <option value="accessories">Accessoires</option>
+                            <option value="clothing">Kleidung</option>
+                            <option value="documents">Dokumente</option>
+                            <option value="other">Sonstiges</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="itemLocation">Fundort *</label>
+                    <input type="text" id="itemLocation" class="form-input" placeholder="z.B. Mensa, Bibliothek, Hörsaal 3A" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="itemDescription">Beschreibung</label>
+                    <textarea id="itemDescription" class="form-textarea" rows="3" placeholder="Besonderheiten, Marke, Farbe, Größe..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="finderContact">Dein Kontakt (optional)</label>
+                    <input type="text" id="finderContact" class="form-input" placeholder="Email oder Instagram für Rückfragen">
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span class="btn-text">Fund veröffentlichen</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal modal--large">
+            <button class="modal-close" onclick="closeDetailModal()">×</button>
+            <div class="detail-content" id="detailContent">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Modal -->
+    <div class="modal-overlay" id="claimModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeClaimModal()">×</button>
+            <h2 class="modal-title">🎉 Das ist meins!</h2>
+            <p class="modal-subtitle">Großartig! Hinterlasse deine Kontaktdaten, damit der Finder dich erreichen kann.</p>
+
+            <form class="upload-form" id="claimForm" onsubmit="handleClaim(event)">
+                <div class="form-group">
+                    <label class="form-label" for="claimerName">Dein Name *</label>
+                    <input type="text" id="claimerName" class="form-input" placeholder="Max Mustermann" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="claimerEmail">Email-Adresse *</label>
+                    <input type="email" id="claimerEmail" class="form-input" placeholder="max@uni.de" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="claimerPhone">Telefon (optional)</label>
+                    <input type="tel" id="claimerPhone" class="form-input" placeholder="+49 123 456789">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="claimerMessage">Nachricht an den Finder</label>
+                    <textarea id="claimerMessage" class="form-textarea" rows="3" placeholder="Beschreibe kurz, warum du dir sicher bist, dass das dein Gegenstand ist..."></textarea>
+                </div>
+
+                <input type="hidden" id="claimItemId">
+
+                <div class="claim-info-box">
+                    <span class="info-icon">🔒</span>
+                    <p>Deine Daten werden nur an den Finder weitergegeben und nicht gespeichert.</p>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span class="btn-text">Kontakt senden</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
