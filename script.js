@@ -119,8 +119,8 @@ const detailContent = document.getElementById('detailContent');
 const imageInput = document.getElementById('itemImage');
 const imagePreview = document.getElementById('imagePreview');
 const uploadPlaceholder = document.querySelector('.upload-placeholder');
-const searchInput = document.querySelector('.search-input');
-const filterButtons = document.querySelectorAll('.filter-btn');
+const searchInput = document.getElementById('headerSearch');
+const filterButtons = document.querySelectorAll('#headerFilters .filter-btn');
 
 // Initialize
 function init() {
@@ -381,7 +381,7 @@ function handleUpload(e) {
         closeUploadModal();
 
         // Show success message
-        showToast('Fund wurde erfolgreich veröffentlicht! 🎉');
+        showToast('Dein Fund ist jetzt für alle sichtbar.', 3500);
 
         // Scroll to items
         document.getElementById('items').scrollIntoView({ behavior: 'smooth' });
@@ -469,38 +469,46 @@ function handleClaim(e) {
     showToastWithHtml(successHtml, 4000);
 }
 
-// Enhanced toast with HTML content
-function showToastWithHtml(html, duration = 3000) {
+// Simple toast notification
+function showToast(message, duration = 3000) {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// Toast with HTML content (for claim success)
+function showToastWithHtml(html, duration = 4000) {
     const existingToast = document.querySelector('.toast');
     if (existingToast) existingToast.remove();
 
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerHTML = html;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%) translateY(100px);
-        background: var(--color-text);
-        color: var(--color-surface);
-        padding: 24px 32px;
-        border-radius: var(--radius-md);
-        font-weight: 600;
-        box-shadow: 0 16px 48px rgba(26, 24, 21, 0.3);
-        z-index: 1000;
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        max-width: 400px;
-    `;
 
     document.body.appendChild(toast);
 
     requestAnimationFrame(() => {
-        toast.style.transform = 'translateX(-50%) translateY(0)';
+        toast.classList.add('show');
     });
 
     setTimeout(() => {
-        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, duration);
 }
@@ -518,47 +526,11 @@ function shareItem(id) {
             text: text,
             url: window.location.href
         });
+        showToast('Erfolgreich geteilt', 2500);
     } else {
         navigator.clipboard.writeText(text + ' ' + window.location.href);
-        showToast('Link kopiert! 📋');
+        showToast('Link in Zwischenablage kopiert', 2500);
     }
-}
-
-// Toast notification
-function showToast(message) {
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) existingToast.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%) translateY(100px);
-        background: var(--color-text);
-        color: var(--color-bg);
-        padding: 16px 24px;
-        border-radius: var(--radius-full);
-        font-weight: 600;
-        box-shadow: var(--shadow-xl);
-        z-index: 1000;
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    `;
-
-    document.body.appendChild(toast);
-
-    // Animate in
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateX(-50%) translateY(0)';
-    });
-
-    // Remove after delay
-    setTimeout(() => {
-        toast.style.transform = 'translateX(-50%) translateY(100px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
 }
 
 // Scroll animations
