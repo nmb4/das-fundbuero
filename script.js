@@ -109,6 +109,7 @@ const categoryEmojis = {
 let items = JSON.parse(localStorage.getItem('fundbuero_items')) || initialItems;
 let currentFilter = 'all';
 let currentSearch = '';
+let finderMode = localStorage.getItem('fundbuero_finder_mode') === 'true';
 
 // DOM Elements
 const itemsGrid = document.getElementById('itemsGrid');
@@ -167,8 +168,13 @@ function createItemCard(item) {
         ? `<img src="${item.image}" alt="${item.title}" class="item-image">`
         : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem;">${categoryEmojis[item.category]}</div>`;
 
+    const isReturned = item.status === 'returned';
+    const statusText = isReturned ? 'Zurückgegeben' : 'Aktiv';
+    const statusClass = isReturned ? 'item-status item-status--returned' : 'item-status';
+    const cardClass = isReturned ? 'item-card item-card--returned' : 'item-card';
+
     return `
-        <article class="item-card" data-id="${item.id}">
+        <article class="${cardClass}" data-id="${item.id}">
             <div class="item-image-container">
                 ${imageHtml}
                 <span class="item-category-badge">${categoryNames[item.category]}</span>
@@ -178,7 +184,7 @@ function createItemCard(item) {
                 <div class="item-location">${item.location}</div>
                 <div class="item-meta">
                     <span class="item-date">${dateStr}</span>
-                    <span class="item-status">Aktiv</span>
+                    <span class="${statusClass}">${statusText}</span>
                 </div>
             </div>
         </article>
@@ -204,6 +210,16 @@ function setupEventListeners() {
             currentFilter = btn.dataset.category;
             renderItems();
         });
+    });
+
+    // Finder mode toggle
+    const finderModeSwitch = document.getElementById('finderModeSwitch');
+    finderModeSwitch.checked = finderMode;
+    finderModeSwitch.addEventListener('change', (e) => {
+        finderMode = e.target.checked;
+        localStorage.setItem('fundbuero_finder_mode', finderMode);
+        renderItems();
+        showToast(finderMode ? '🔍 Finder-Modus aktiviert' : 'Finder-Modus deaktiviert', 2500);
     });
 
     // Close modals on overlay click
@@ -301,6 +317,55 @@ function openDetailModal(id) {
         ? `<div class="detail-image-container"><img src="${item.image}" alt="${item.title}" class="detail-image"></div>`
         : `<div class="detail-image-container" style="display: flex; align-items: center; justify-content: center; font-size: 6rem; min-height: 280px;">${categoryEmojis[item.category]}</div>`;
 
+    const isReturned = item.status === 'returned';
+
+    // Generate different buttons based on finder mode and item status
+    let actionButtons = '';
+
+    if (finderMode) {
+        // Finder mode: show mark as returned/unmark buttons
+        if (isReturned) {
+            actionButtons = `
+                <button class="btn-secondary" onclick="unmarkAsReturned(${item.id})">
+                    ↩️ Wieder verfügbar
+                </button>
+                <button class="btn-secondary" onclick="shareItem(${item.id})">
+                    Teilen
+                </button>
+            `;
+        } else {
+            actionButtons = `
+                <button class="btn-primary btn-primary--returned" onclick="markAsReturned(${item.id})">
+                    ✅ Als zurückgegeben markieren
+                </button>
+                <button class="btn-secondary" onclick="shareItem(${item.id})">
+                    Teilen
+                </button>
+            `;
+        }
+    } else {
+        // Normal mode: show claim button (unless returned)
+        if (isReturned) {
+            actionButtons = `
+                <button class="btn-secondary btn-secondary--disabled" disabled>
+                    🎁 Bereits zurückgegeben
+                </button>
+                <button class="btn-secondary" onclick="shareItem(${item.id})">
+                    Teilen
+                </button>
+            `;
+        } else {
+            actionButtons = `
+                <button class="btn-primary" onclick="claimItem(${item.id})">
+                    Das ist meins! 🎉
+                </button>
+                <button class="btn-secondary" onclick="shareItem(${item.id})">
+                    Teilen
+                </button>
+            `;
+        }
+    }
+
     detailContent.innerHTML = `
         ${imageHtml}
         <div class="detail-info">
@@ -322,6 +387,15 @@ function openDetailModal(id) {
                         <span class="meta-value">${dateStr}</span>
                     </div>
                 </div>
+                ${isReturned ? `
+                    <div class="meta-row">
+                        <span class="meta-icon">✅</span>
+                        <div class="meta-content">
+                            <span class="meta-label">Status</span>
+                            <span class="meta-value" style="color: var(--color-accent);">Zurückgegeben</span>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
 
             ${item.description ? `
@@ -330,13 +404,15 @@ function openDetailModal(id) {
                 </div>
             ` : ''}
 
+            ${finderMode ? `
+                <div class="finder-mode-indicator">
+                    <span class="finder-badge">🔍 Finder-Modus</span>
+                    <p class="finder-hint">Du siehst diese Aktionen, weil du im Finder-Modus bist.</p>
+                </div>
+            ` : ''}
+
             <div class="detail-actions">
-                <button class="btn-primary" onclick="claimItem(${item.id})">
-                    Das ist meins! 🎉
-                </button>
-                <button class="btn-secondary" onclick="shareItem(${item.id})">
-                    Teilen
-                </button>
+                ${actionButtons}
             </div>
         </div>
     `;
@@ -531,6 +607,36 @@ function shareItem(id) {
         navigator.clipboard.writeText(text + ' ' + window.location.href);
         showToast('Link in Zwischenablage kopiert', 2500);
     }
+}
+
+// Mark item as returned (only for finder in demo mode)
+function markAsReturned(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    item.status = 'returned';
+    item.returnedAt = new Date().toISOString();
+
+    localStorage.setItem('fundbuero_items', JSON.stringify(items));
+    renderItems();
+    closeDetailModal();
+
+    showToast('✅ Als zurückgegeben markiert', 3000);
+}
+
+// Unmark item as returned (for demo purposes)
+function unmarkAsReturned(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    item.status = 'available';
+    delete item.returnedAt;
+
+    localStorage.setItem('fundbuero_items', JSON.stringify(items));
+    renderItems();
+    closeDetailModal();
+
+    showToast('↩️ Wieder als verfügbar markiert', 3000);
 }
 
 // Scroll animations
